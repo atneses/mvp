@@ -17,6 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from core.health import healthz, readyz
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('healthz', healthz),
+    path('readyz', readyz),
 ]
