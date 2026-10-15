@@ -84,6 +84,8 @@ DATABASES = {
     'default': env.db("DATABASE_URL", default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"),
 }
 
+REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
