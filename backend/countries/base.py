@@ -12,3 +12,7 @@ from typing import Protocol, runtime_checkable
 class CountryPlugin(Protocol):
     code: str  # ISO 3166-1 alpha-2, e.g. "ES"
     currency: str  # ISO 4217, e.g. "EUR"
+
+
+class InvalidDocumentError(ValueError):
+    """The identity document is not valid. The message never includes the document (PII)."""
