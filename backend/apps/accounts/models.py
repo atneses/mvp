@@ -14,3 +14,7 @@ class User(AbstractUser):
     role = models.CharField(max_length=16, choices=Role.choices, default=Role.ANALYST)
 
     allowed_countries = ArrayField(models.CharField(max_length=2), default=list, blank=True)
+
+    def can_access_country(self, country: str) -> bool:
+        # Admins are scoped too: they only see the countries they were given.
+        return country in self.allowed_countries
