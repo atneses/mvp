@@ -14,6 +14,8 @@ from pathlib import Path
 
 import environ
 
+from core.logging import configure_logging
+
 env = environ.Env(DJANGO_DEBUG=(bool, False))
 
 
@@ -46,6 +48,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    # First, so it times the whole request and its id reaches every log line.
+    "core.middleware.CorrelationIdMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -83,6 +87,13 @@ DATABASES = {
 }
 
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
+
+
+# Logging: one JSON object per line (see core/logging.py).
+
+SERVICE_NAME = env("SERVICE_NAME", default="api")
+LOG_LEVEL = env("LOG_LEVEL", default="INFO")
+LOGGING = configure_logging(service=SERVICE_NAME, level=LOG_LEVEL)
 
 
 # Password validation
