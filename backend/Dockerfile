@@ -6,10 +6,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+# Which requirements file to install: requirements.txt (production) by default,
+# requirements-dev.txt for local development (adds pytest, ruff...).
+ARG REQUIREMENTS=requirements.txt
+
 # Dependencies go before the code: if only the code changes,
 # Docker reuses this layer and skips reinstalling.
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir -r ${REQUIREMENTS}
 
 COPY . .
 
