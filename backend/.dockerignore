@@ -5,3 +5,6 @@ db.sqlite3
 .env
 Dockerfile
 .dockerignore
+# Tests live next to the code but are not shipped in the image.
+**/tests/
+.ruff_cache/
