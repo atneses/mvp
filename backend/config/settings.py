@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -45,6 +46,9 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework",
+    # Stores used refresh tokens so they cannot be reused after rotation.
+    "rest_framework_simplejwt.token_blacklist",
     "apps.accounts",
 ]
 
@@ -88,6 +92,26 @@ DATABASES = {
 }
 
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
+
+
+# API: JWT only, and every endpoint requires authentication unless it says otherwise.
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+}
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    # Each refresh returns a new refresh token and invalidates the old one.
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    # Own key, separate from SECRET_KEY, so it can be rotated on its own.
+    "SIGNING_KEY": env("JWT_SIGNING_KEY"),
+}
 
 
 # Logging: one JSON object per line (see core/logging.py).

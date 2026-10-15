@@ -38,6 +38,7 @@ services:
     command: uvicorn config.asgi:application --host 0.0.0.0 --port 8000 --reload --no-access-log
     environment:
       DJANGO_SECRET_KEY: dev-only-not-secret
+      JWT_SIGNING_KEY: dev-only-not-secret-jwt-signing-key
       DJANGO_DEBUG: "true"
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,api
       DATABASE_URL: postgres://bravo_user:rootpassword@postgres:5432/bravodb?connect_timeout=2
