@@ -94,6 +94,11 @@ DATABASES = {
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
 
 
+# Countries: each code needs a plugin in countries/<code>/plugin.py.
+
+ENABLED_COUNTRIES = env.list("ENABLED_COUNTRIES", default=["ES", "MX"])
+
+
 # API: JWT only, and every endpoint requires authentication unless it says otherwise.
 
 REST_FRAMEWORK = {
