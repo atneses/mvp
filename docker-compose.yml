@@ -1,2 +1,33 @@
 services:
-  
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: bravo_user
+      POSTGRES_PASSWORD: rootpassword
+      POSTGRES_DB: bravodb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      start_period: 10s
+      start_interval: 1s
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "[ \"$$(redis-cli ping)\" = 'PONG' ]"]
+      start_period: 10s
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:
