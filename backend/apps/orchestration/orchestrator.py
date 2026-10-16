@@ -4,6 +4,7 @@ from agents.banking import BankingAgent
 from agents.base import AgentContext
 from agents.explainer import ExplainerAgent
 from agents.intake import IntakeAgent
+from agents.notifier import NotifierAgent
 from agents.risk import RiskAgent
 from apps.loans.models import LoanApplication
 from apps.loans.services import VersionConflictError, change_status, save_updates
@@ -13,13 +14,14 @@ from .models import Job
 
 S = LoanApplication.Status
 
+# Agents run in order; the first one that changes the status ends the step.
 AGENTS = {
-    S.CREATED: IntakeAgent(),
-    S.FETCHING_BANK_DATA: BankingAgent(),
-    S.EVALUATING: RiskAgent(),
-    S.APPROVED: ExplainerAgent(),
-    S.REJECTED: ExplainerAgent(),
-    S.MANUAL_REVIEW: ExplainerAgent(),
+    S.CREATED: [IntakeAgent()],
+    S.FETCHING_BANK_DATA: [BankingAgent()],
+    S.EVALUATING: [RiskAgent()],
+    S.APPROVED: [ExplainerAgent(), NotifierAgent()],
+    S.REJECTED: [ExplainerAgent(), NotifierAgent()],
+    S.MANUAL_REVIEW: [ExplainerAgent(), NotifierAgent()],
 }
 
 logger = structlog.get_logger("orchestrator")
@@ -33,18 +35,19 @@ def advance(job: Job) -> None:
     if application.version != int(job.dedupe_key.rsplit(":", 1)[1]):
         logger.info("stale_job_skipped", version=application.version)
         return
-    agent = AGENTS.get(application.status)
-    if agent is None:
-        return
+    for agent in AGENTS.get(application.status, []):
+        if not _run(agent, application, job):
+            return
 
+
+def _run(agent, application, job) -> bool:
+    """Run one agent and save its result. Returns False when the step is over."""
     result = agent.run(AgentContext(application, agent.fields))
-    if result.next_status is None:
-        try:
-            save_updates(application, application.version, result.updates)
-        except VersionConflictError:
-            logger.info("version_conflict_skipped", agent=agent.name)
-        return
     try:
+        if result.next_status is None:
+            if result.updates:
+                save_updates(application, application.version, result.updates)
+            return True
         with audit_context(
             correlation_id=job.correlation_id, reason=result.reason, agent=agent.name
         ):
@@ -56,3 +59,4 @@ def advance(job: Job) -> None:
             )
     except VersionConflictError:
         logger.info("version_conflict_skipped", agent=agent.name)
+    return False

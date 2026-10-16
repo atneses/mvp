@@ -5,14 +5,16 @@ import pytest
 from apps.accounts.models import User
 from apps.loans.models import AuditEvent, LoanApplication
 from apps.orchestration.handlers import HANDLERS
+from apps.orchestration.models import Job
 from apps.orchestration.queue import JobQueue
 from apps.orchestration.worker import Worker
 
 
 @pytest.fixture
 def spanish_bank(live_server, settings):
-    # A real HTTP server running the simulator, so the agent makes a real request.
+    # A real HTTP server running the simulators, so the agents make real requests.
     settings.ES_BANK_URL = f"{live_server.url}/simulators/es/bank-profile"
+    settings.NOTIFICATION_WEBHOOK_URL = f"{live_server.url}/simulators/webhook"
 
 
 @pytest.mark.django_db(transaction=True)
@@ -33,6 +35,8 @@ def test_application_goes_through_the_flow_on_its_own(spanish_bank):
 
     application.refresh_from_db()
     assert application.status == "APPROVED"
+    # Every step, including the outbound notification, finished without errors.
+    assert set(Job.objects.values_list("status", "last_error")) == {("done", "")}
     assert application.bank_profile == {"monthly_debt_payments": "1176.96"}
     assert "was approved" in application.explanation
     assert "Ana" not in application.explanation and "12345678Z" not in application.explanation

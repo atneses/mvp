@@ -4,9 +4,12 @@ import hashlib
 import json
 from decimal import Decimal
 
-from django.http import JsonResponse
+import structlog
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+
+logger = structlog.get_logger("simulators")
 
 
 @csrf_exempt
@@ -28,3 +31,11 @@ def mexico_bank_profile(request):
     return JsonResponse(
         {"cliente": {"pagos_mensuales_centavos": seed % 3_000_000}, "divisa": "MXN"}
     )
+
+
+@csrf_exempt
+@require_POST
+def webhook_receiver(request):
+    """Stands for the external system that gets our notifications."""
+    logger.info("webhook_received", payload=json.loads(request.body))
+    return HttpResponse(status=204)
