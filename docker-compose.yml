@@ -44,6 +44,7 @@ services:
       DJANGO_DEBUG: "true"
       SIMULATORS_ENABLED: "true"
       ES_BANK_URL: http://api:8000/simulators/es/bank-profile
+      MX_BANK_URL: http://api:8000/simulators/mx/bank-profile
       DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,api
       DATABASE_URL: postgres://bravo_user:rootpassword@postgres:5432/bravodb?connect_timeout=2
       REDIS_URL: redis://redis:6379/0

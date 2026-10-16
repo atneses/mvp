@@ -37,6 +37,8 @@ class LoanApplication(models.Model):
     document = models.CharField(max_length=32)
     # Common format for every country's bank (see CountryPlugin.fetch_bank_profile).
     bank_profile = models.JSONField(null=True)
+    # Written by the ExplainerAgent (simulated LLM); informative only, never the decision.
+    explanation = models.TextField(db_default="")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
 
     created_at = models.DateTimeField(auto_now_add=True)

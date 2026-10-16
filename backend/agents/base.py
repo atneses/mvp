@@ -19,7 +19,8 @@ class AgentContext:
 
 @dataclass(frozen=True)
 class AgentResult:
-    next_status: str
+    # None: stay in the current status and only save the updates.
+    next_status: str | None
     reason: str = ""
     updates: dict[str, Any] = field(default_factory=dict)
 

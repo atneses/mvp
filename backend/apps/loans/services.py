@@ -11,6 +11,17 @@ class VersionConflictError(Exception):
     """Someone else changed the application since it was read."""
 
 
+def save_updates(application: LoanApplication, expected_version: int, updates: dict) -> None:
+    """Save derived data without a status change; the version is checked but not bumped."""
+    updated = LoanApplication.objects.filter(id=application.id, version=expected_version).update(
+        updated_at=timezone.now(), **updates
+    )
+    if updated == 0:
+        raise VersionConflictError()
+    for name, value in updates.items():
+        setattr(application, name, value)
+
+
 def change_status(
     application: LoanApplication, target: str, expected_version: int, updates=None
 ) -> None:

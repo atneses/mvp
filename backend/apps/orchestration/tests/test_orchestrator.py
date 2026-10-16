@@ -34,6 +34,8 @@ def test_application_goes_through_the_flow_on_its_own(spanish_bank):
     application.refresh_from_db()
     assert application.status == "APPROVED"
     assert application.bank_profile == {"monthly_debt_payments": "1176.96"}
+    assert "was approved" in application.explanation
+    assert "Ana" not in application.explanation and "12345678Z" not in application.explanation
     trail = AuditEvent.objects.filter(application_id=application.id).order_by("id")
     assert [(e.data["to"], e.data["agent"]) for e in trail] == [
         ("CREATED", None),

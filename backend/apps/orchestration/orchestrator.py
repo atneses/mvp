@@ -2,10 +2,11 @@ import structlog
 
 from agents.banking import BankingAgent
 from agents.base import AgentContext
+from agents.explainer import ExplainerAgent
 from agents.intake import IntakeAgent
 from agents.risk import RiskAgent
 from apps.loans.models import LoanApplication
-from apps.loans.services import VersionConflictError, change_status
+from apps.loans.services import VersionConflictError, change_status, save_updates
 from core.audit import audit_context
 
 from .models import Job
@@ -16,6 +17,9 @@ AGENTS = {
     S.CREATED: IntakeAgent(),
     S.FETCHING_BANK_DATA: BankingAgent(),
     S.EVALUATING: RiskAgent(),
+    S.APPROVED: ExplainerAgent(),
+    S.REJECTED: ExplainerAgent(),
+    S.MANUAL_REVIEW: ExplainerAgent(),
 }
 
 logger = structlog.get_logger("orchestrator")
@@ -34,6 +38,12 @@ def advance(job: Job) -> None:
         return
 
     result = agent.run(AgentContext(application, agent.fields))
+    if result.next_status is None:
+        try:
+            save_updates(application, application.version, result.updates)
+        except VersionConflictError:
+            logger.info("version_conflict_skipped", agent=agent.name)
+        return
     try:
         with audit_context(
             correlation_id=job.correlation_id, reason=result.reason, agent=agent.name

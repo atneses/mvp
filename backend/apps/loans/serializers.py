@@ -62,6 +62,7 @@ class LoanApplicationDetailSerializer(serializers.ModelSerializer):
             "monthly_income",
             "full_name",
             "document",
+            "explanation",
             "created_at",
             "updated_at",
         ]
