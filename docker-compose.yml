@@ -36,7 +36,7 @@ services:
         REQUIREMENTS: requirements-dev.txt
     # Local dev: --reload restarts uvicorn on file save (the code is mounted below).
     command: uvicorn config.asgi:application --host 0.0.0.0 --port 8000 --reload --no-access-log
-    environment:
+    environment: &backend-env
       DJANGO_SECRET_KEY: dev-only-not-secret
       JWT_SIGNING_KEY: dev-only-not-secret-jwt-signing-key
       # Password of the demo users created by `make seed`.
@@ -47,6 +47,28 @@ services:
       REDIS_URL: redis://redis:6379/0
     ports:
       - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+      args:
+        REQUIREMENTS: requirements-dev.txt
+    command: python manage.py run_worker
+    environment:
+      # Same settings as the api (YAML anchor), plus its own service name for the logs.
+      <<: *backend-env
+      SERVICE_NAME: worker
+    # Two replicas: shows that jobs are shared out, never taken twice.
+    deploy:
+      replicas: 2
+    restart: unless-stopped
     volumes:
       - ./backend:/app
     depends_on:
