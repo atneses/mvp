@@ -17,7 +17,7 @@ import environ
 
 from core.logging import configure_logging
 
-env = environ.Env(DJANGO_DEBUG=(bool, False))
+env = environ.Env(DJANGO_DEBUG=(bool, False), SIMULATORS_ENABLED=(bool, False))
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -94,6 +94,10 @@ DATABASES = {
 }
 
 REDIS_URL = env("REDIS_URL", default="redis://localhost:6379/0")
+
+
+# Fake bank providers (apps/simulators): only for development and demos.
+SIMULATORS_ENABLED = env("SIMULATORS_ENABLED")
 
 
 # Countries: each code needs a plugin in countries/<code>/plugin.py.
