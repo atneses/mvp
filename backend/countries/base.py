@@ -15,7 +15,7 @@ class CountryPlugin(Protocol):
 
     def validate_document(self, value: str) -> str:
         """Return the normalized document or raise InvalidDocumentError."""
-        ...
+        pass
 
 
 class InvalidDocumentError(ValueError):
