@@ -8,7 +8,13 @@ from apps.accounts.models import User
 from apps.accounts.permissions import CountryScoped
 
 from .models import LoanApplication
-from .serializers import LoanApplicationCreateSerializer, LoanApplicationDetailSerializer
+from .pagination import LoanApplicationCursorPagination
+from .serializers import (
+    LoanApplicationCreateSerializer,
+    LoanApplicationDetailSerializer,
+    LoanApplicationFilterSerializer,
+    LoanApplicationListSerializer,
+)
 
 ONE_ACTIVE_PER_DOCUMENT = "loan_one_active_per_document"
 
@@ -21,9 +27,28 @@ class ActiveApplicationExists(APIException):
     default_code = "active_application_exists"
 
 
-class LoanApplicationCreateView(generics.CreateAPIView):
-    serializer_class = LoanApplicationCreateSerializer
+class LoanApplicationListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated, CountryScoped]
+    pagination_class = LoanApplicationCursorPagination
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return LoanApplicationCreateSerializer
+        return LoanApplicationListSerializer
+
+    def get_queryset(self):
+        queryset = LoanApplication.objects.filter(country__in=self.request.user.allowed_countries)
+        if self.request.method != "GET":
+            return queryset
+
+        filters = LoanApplicationFilterSerializer(data=self.request.query_params)
+        filters.is_valid(raise_exception=True)
+        params = filters.validated_data
+        if "country" in params:
+            queryset = queryset.filter(country=params["country"])
+        if "status" in params:
+            queryset = queryset.filter(status=params["status"])
+        return queryset
 
     def perform_create(self, serializer):
         try:

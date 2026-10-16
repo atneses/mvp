@@ -73,3 +73,32 @@ class LoanApplicationDetailSerializer(serializers.ModelSerializer):
             data["full_name"] = mask_name(instance.full_name)
             data["document"] = mask_document(instance.document)
         return data
+
+
+class LoanApplicationListSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+    document = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LoanApplication
+        fields = [
+            "id",
+            "country",
+            "status",
+            "amount",
+            "currency",
+            "full_name",
+            "document",
+            "created_at",
+        ]
+
+    def get_full_name(self, instance):
+        return mask_name(instance.full_name)
+
+    def get_document(self, instance):
+        return mask_document(instance.document)
+
+
+class LoanApplicationFilterSerializer(serializers.Serializer):
+    country = serializers.CharField(max_length=2, required=False)
+    status = serializers.ChoiceField(choices=LoanApplication.Status.choices, required=False)

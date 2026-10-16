@@ -1,9 +1,13 @@
 from django.urls import path
 
-from .views import LoanApplicationCreateView, LoanApplicationDetailView
+from .views import LoanApplicationDetailView, LoanApplicationListCreateView
 
 urlpatterns = [
-    path("loan-applications", LoanApplicationCreateView.as_view(), name="loan-application-create"),
+    path(
+        "loan-applications",
+        LoanApplicationListCreateView.as_view(),
+        name="loan-application-list",
+    ),
     path(
         "loan-applications/<uuid:pk>",
         LoanApplicationDetailView.as_view(),
