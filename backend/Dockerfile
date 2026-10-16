@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 # Don't write .pyc files and flush logs immediately (unbuffered).
 ENV PYTHONDONTWRITEBYTECODE=1 \
