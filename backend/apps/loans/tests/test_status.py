@@ -53,7 +53,7 @@ def test_illegal_transition_is_rejected(application):
     response = _change(_client(User.Role.ADMIN), application, "APPROVED", expected_version=1)
 
     assert response.status_code == 400
-    assert "to" in response.json()
+    assert "to" in response.json()["details"]
 
 
 def test_analyst_cannot_change_the_status(application):

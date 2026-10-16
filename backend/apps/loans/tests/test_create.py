@@ -41,7 +41,7 @@ def test_invalid_document_points_to_the_field(analyst_es):
     response = analyst_es.post(URL, _payload(document="12345678A"), format="json")
 
     assert response.status_code == 400
-    assert "document" in response.json()
+    assert "document" in response.json()["details"]
     assert "12345678A" not in response.content.decode()
 
 
@@ -58,4 +58,4 @@ def test_second_active_application_for_the_same_document_is_a_conflict(analyst_e
     response = analyst_es.post(URL, _payload(document="12345678Z"), format="json")
 
     assert response.status_code == 409
-    assert response.json()["detail"] == "There is already an active application for this document."
+    assert response.json()["message"] == "There is already an active application for this document."

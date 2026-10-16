@@ -107,6 +107,8 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    # Uniform error body: {code, message, details, correlation_id}.
+    "EXCEPTION_HANDLER": "core.errors.exception_handler",
 }
 
 SIMPLE_JWT = {
