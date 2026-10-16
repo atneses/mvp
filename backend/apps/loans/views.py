@@ -1,5 +1,5 @@
 import structlog
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from rest_framework import generics, status
 from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.permissions import IsAuthenticated
@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from apps.accounts.models import User
 from apps.accounts.permissions import CountryScoped, IsAdmin
+from core.audit import audit_context
 
 from .models import AuditEvent, LoanApplication
 from .pagination import LoanApplicationCursorPagination
@@ -63,7 +64,9 @@ class LoanApplicationListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         try:
             # Own transaction so the connection stays usable after the error.
-            with transaction.atomic():
+            with audit_context(
+                actor_id=self.request.user.id, correlation_id=self.request.correlation_id
+            ):
                 serializer.save(created_by=self.request.user)
         except IntegrityError as error:
             # Only the "one active application per document" rule becomes a 409.
@@ -111,7 +114,12 @@ class LoanApplicationStatusView(generics.GenericAPIView):
         previous = application.status
 
         try:
-            change_status(application, data["to"], data["expected_version"])
+            with audit_context(
+                actor_id=request.user.id,
+                correlation_id=request.correlation_id,
+                reason=data["reason"],
+            ):
+                change_status(application, data["to"], data["expected_version"])
         except VersionConflictError:
             raise VersionConflict() from None
         except InvalidTransitionError as error:
