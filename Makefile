@@ -6,10 +6,12 @@ COMPOSE := docker compose
 RUN_API := $(COMPOSE) run --rm api
 
 .DEFAULT_GOAL := help
-.PHONY: help up down logs shell makemigrations migrate seed test lint format
+.PHONY: help run up down logs shell makemigrations migrate seed test lint format
 
 help: ## List available targets
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
+
+run: up migrate seed ## Start everything from scratch: services, migrations and demo users
 
 up: ## Build and start all services in the background
 	$(COMPOSE) up -d --build
