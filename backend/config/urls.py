@@ -23,7 +23,7 @@ from core.health import healthz, readyz
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/auth/", include("apps.accounts.urls")),
-    path("api/loan-applications", include("apps.loans.urls")),
+    path("api/", include("apps.loans.urls")),
     path("healthz", healthz),
     path("readyz", readyz),
 ]

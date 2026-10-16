@@ -2,6 +2,8 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
+from apps.accounts.models import User
+from core.pii import mask_document, mask_name
 from countries.base import InvalidDocumentError
 from countries.registry import get_plugin
 
@@ -44,4 +46,30 @@ class LoanApplicationCreateSerializer(serializers.ModelSerializer):
         except InvalidDocumentError as error:
             raise serializers.ValidationError({"document": [str(error)]}) from None
         data["currency"] = plugin.currency
+        return data
+
+
+class LoanApplicationDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LoanApplication
+        fields = [
+            "id",
+            "country",
+            "status",
+            "version",
+            "amount",
+            "currency",
+            "monthly_income",
+            "full_name",
+            "document",
+            "created_at",
+            "updated_at",
+        ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Only admins see the full PII; everyone else gets it masked.
+        if self.context["request"].user.role != User.Role.ADMIN:
+            data["full_name"] = mask_name(instance.full_name)
+            data["document"] = mask_document(instance.document)
         return data
