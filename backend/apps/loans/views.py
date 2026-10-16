@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from apps.accounts.models import User
 from apps.accounts.permissions import CountryScoped, IsAdmin
 
-from .models import LoanApplication
+from .models import AuditEvent, LoanApplication
 from .pagination import LoanApplicationCursorPagination
 from .serializers import (
     LoanApplicationCreateSerializer,
@@ -84,6 +84,12 @@ class LoanApplicationDetailView(generics.RetrieveAPIView):
         response = super().retrieve(request, *args, **kwargs)
         if request.user.role == User.Role.ADMIN:
             # Full PII was shown: leave a trace (ids only, never the data).
+            AuditEvent.objects.create(
+                event="pii_access",
+                application_id=kwargs["pk"],
+                actor_id=request.user.id,
+                correlation_id=request.correlation_id,
+            )
             logger.info("pii_access", user_id=request.user.id, application_id=str(kwargs["pk"]))
         return response
 

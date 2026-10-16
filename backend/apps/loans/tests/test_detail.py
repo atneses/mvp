@@ -2,10 +2,9 @@ from decimal import Decimal
 
 import pytest
 from rest_framework.test import APIClient
-from structlog.testing import capture_logs
 
 from apps.accounts.models import User
-from apps.loans.models import LoanApplication
+from apps.loans.models import AuditEvent, LoanApplication
 
 
 @pytest.fixture
@@ -42,12 +41,11 @@ def test_analyst_sees_masked_pii(application_es):
 def test_admin_sees_full_pii_and_the_access_is_logged(application_es):
     admin = _client("admin", role=User.Role.ADMIN, countries=("ES", "MX"))
 
-    with capture_logs() as logs:
-        body = admin.get(_url(application_es)).json()
+    body = admin.get(_url(application_es)).json()
 
     assert body["document"] == "12345678Z"
     assert body["full_name"] == "Ana Pérez"
-    assert any(log["event"] == "pii_access" for log in logs)
+    assert AuditEvent.objects.filter(event="pii_access", application_id=application_es.id).exists()
 
 
 def test_application_of_another_country_does_not_exist_for_the_user(application_es):

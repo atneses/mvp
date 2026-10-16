@@ -8,6 +8,7 @@ from uuid import uuid7
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.db.models.functions import Now
 
 from countries.registry import country_choices
 
@@ -64,3 +65,25 @@ class LoanApplication(models.Model):
     def __str__(self):
         # No PII: this text can end up in logs and in the admin.
         return f"{self.country} {self.id} {self.status}"
+
+
+class AuditEvent(models.Model):
+    """Append-only history: a database trigger rejects any UPDATE or DELETE."""
+
+    id = models.BigAutoField(primary_key=True)
+    # No foreign keys: the history must outlive the rows it talks about.
+    application_id = models.UUIDField(null=True)
+    actor_id = models.BigIntegerField(null=True)
+    event = models.CharField(max_length=64)
+    data = models.JSONField(db_default={})
+    correlation_id = models.CharField(max_length=64, db_default="")
+    created_at = models.DateTimeField(db_default=Now())
+
+    class Meta:
+        db_table = "audit_events"
+        indexes = [
+            models.Index(fields=["application_id", "created_at"], name="audit_application_created"),
+        ]
+
+    def __str__(self):
+        return f"{self.event} #{self.id}"
