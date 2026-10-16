@@ -49,7 +49,6 @@ class LoanApplication(models.Model):
                 name="loan_country_status_created",
             ),
             models.Index(fields=["country", "-created_at", "-id"], name="loan_country_created"),
-
             models.Index(fields=["country", "document"], name="loan_country_document"),
         ]
         constraints = [
