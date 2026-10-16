@@ -24,7 +24,7 @@ shell: ## Open a Django shell inside the API container
 	$(RUN_API) python manage.py shell
 
 makemigrations: ## Create migration files from model changes (and format them)
-	$(RUN_API) sh -c "python manage.py makemigrations && ruff check --fix --quiet . && ruff format --quiet ."
+	$(RUN_API) sh -c "python manage.py makemigrations && ruff check --select I --fix --quiet . && ruff format --quiet ."
 
 migrate: ## Apply database migrations
 	$(RUN_API) python manage.py migrate
