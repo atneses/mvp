@@ -17,7 +17,6 @@ class LoanApplication(models.Model):
     class Status(models.TextChoices):
         CREATED = "CREATED"
         FETCHING_BANK_DATA = "FETCHING_BANK_DATA"
-        WAITING_BANK_CALLBACK = "WAITING_BANK_CALLBACK"
         EVALUATING = "EVALUATING"
         MANUAL_REVIEW = "MANUAL_REVIEW"
         APPROVED = "APPROVED"

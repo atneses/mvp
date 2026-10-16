@@ -1,11 +1,4 @@
-"""State machine: which status changes are allowed.
-
-A common base flow plus the extra transitions each country plugin declares
-(e.g. MX waits for an asynchronous bank callback). Manual and automatic
-changes go through the same check.
-"""
-
-from countries.registry import get_plugin
+"""State machine: which status changes are allowed. Manual and automatic changes share it."""
 
 from .models import LoanApplication
 
@@ -29,15 +22,7 @@ class InvalidTransitionError(Exception):
     pass
 
 
-def check_transition(country: str, current: str, target: str) -> None:
-    """Raise InvalidTransitionError if `current -> target` is not allowed in `country`."""
-    if target not in _transitions(country).get(current, set()):
-        raise InvalidTransitionError(f"{current} -> {target} is not allowed for {country}.")
-
-
-def _transitions(country: str) -> dict[str, set[str]]:
-    # Base flow plus the country's extra transitions.
-    transitions = {status: set(targets) for status, targets in BASE_TRANSITIONS.items()}
-    for status, targets in get_plugin(country).state_extension.items():
-        transitions.setdefault(status, set()).update(targets)
-    return transitions
+def check_transition(current: str, target: str) -> None:
+    """Raise InvalidTransitionError if `current -> target` is not allowed."""
+    if target not in BASE_TRANSITIONS.get(current, set()):
+        raise InvalidTransitionError(f"{current} -> {target} is not allowed.")

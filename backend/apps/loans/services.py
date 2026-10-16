@@ -20,7 +20,7 @@ def change_status(
     """
     if application.version != expected_version:
         raise VersionConflictError()
-    check_transition(application.country, application.status, target)
+    check_transition(application.status, target)
 
     # Optimistic locking: the WHERE on version makes the check and the write one atomic step.
     # If another request changed the row in the meantime, no row matches and nothing is written.
