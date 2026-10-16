@@ -1,0 +1,47 @@
+from decimal import Decimal
+
+from rest_framework import serializers
+
+from countries.base import InvalidDocumentError
+from countries.registry import get_plugin
+
+from .models import LoanApplication
+
+
+class LoanApplicationCreateSerializer(serializers.ModelSerializer):
+    amount = serializers.DecimalField(max_digits=18, decimal_places=2, min_value=Decimal("0.01"))
+    monthly_income = serializers.DecimalField(
+        max_digits=18, decimal_places=2, min_value=Decimal("0.01")
+    )
+    # Write-only: the response of a creation never echoes PII.
+    full_name = serializers.CharField(max_length=200, write_only=True)
+    document = serializers.CharField(max_length=32, write_only=True)
+
+    class Meta:
+        model = LoanApplication
+        fields = [
+            "id",
+            "country",
+            "status",
+            "version",
+            "amount",
+            "currency",
+            "monthly_income",
+            "full_name",
+            "document",
+            "created_at",
+        ]
+        read_only_fields = ["id", "status", "version", "currency", "created_at"]
+        # No automatic unique check: the database constraint decides (safe under
+        # concurrent requests) and the view turns it into a 409.
+        validators = []
+
+    def validate(self, data):
+        # Each country validates its own document and sets its own currency.
+        plugin = get_plugin(data["country"])
+        try:
+            data["document"] = plugin.validate_document(data["document"])
+        except InvalidDocumentError as error:
+            raise serializers.ValidationError({"document": [str(error)]}) from None
+        data["currency"] = plugin.currency
+        return data
