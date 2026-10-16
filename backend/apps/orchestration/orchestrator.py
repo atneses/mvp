@@ -3,7 +3,7 @@ import structlog
 from agents.banking import BankingAgent
 from agents.base import AgentContext
 from agents.intake import IntakeAgent
-from agents.stubs import PassThroughAgent
+from agents.risk import RiskAgent
 from apps.loans.models import LoanApplication
 from apps.loans.services import VersionConflictError, change_status
 from core.audit import audit_context
@@ -15,7 +15,7 @@ S = LoanApplication.Status
 AGENTS = {
     S.CREATED: IntakeAgent(),
     S.FETCHING_BANK_DATA: BankingAgent(),
-    S.EVALUATING: PassThroughAgent("risk", S.APPROVED),
+    S.EVALUATING: RiskAgent(),
 }
 
 logger = structlog.get_logger("orchestrator")

@@ -14,5 +14,8 @@ class MexicoPlugin:
     def fetch_bank_profile(self, document):
         raise NotImplementedError("The Mexican bank provider arrives in step 35.")
 
+    def evaluate(self, amount, monthly_income, bank_profile):
+        raise NotImplementedError("The Mexican rules arrive in step 38.")
+
 
 plugin = MexicoPlugin()

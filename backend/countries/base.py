@@ -24,6 +24,10 @@ class CountryPlugin(Protocol):
         """Common format for every bank: {"monthly_debt_payments": "<decimal as text>"}."""
         pass
 
+    def evaluate(self, amount, monthly_income, bank_profile: dict) -> tuple[str, str]:
+        """Credit decision (APPROVED, REJECTED or MANUAL_REVIEW) and its reason."""
+        pass
+
 
 class InvalidDocumentError(ValueError):
     """The identity document is not valid. The message never includes the document (PII)."""
