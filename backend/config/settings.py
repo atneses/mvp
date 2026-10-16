@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     # Stores used refresh tokens so they cannot be reused after rotation.
     "rest_framework_simplejwt.token_blacklist",
     "apps.accounts",
+    "apps.loans",
 ]
 
 MIDDLEWARE = [

@@ -26,6 +26,11 @@ def enabled_countries() -> list[str]:
     return list(_load_plugins())
 
 
+def country_choices() -> list[tuple[str, str]]:
+    """For model and form choices. A function, so migrations store it and not the list."""
+    return [(code, code) for code in enabled_countries()]
+
+
 @cache
 def _load_plugins() -> dict[str, CountryPlugin]:
     # Loaded once; each country lives in countries/<code>/plugin.py as `plugin`.
