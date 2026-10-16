@@ -1,12 +1,3 @@
-"""What the worker does for each kind of job. For now it only logs."""
+from . import orchestrator
 
-import structlog
-
-logger = structlog.get_logger("jobs")
-
-
-def advance(job):
-    logger.info("advance_requested")
-
-
-HANDLERS = {"advance": advance}
+HANDLERS = {"advance": orchestrator.advance}

@@ -53,3 +53,27 @@ class Job(models.Model):
 
     def __str__(self):
         return f"{self.kind} #{self.id} {self.status}"
+
+
+class AgentRun(models.Model):
+    class Status(models.TextChoices):
+        SUCCEEDED = "succeeded"
+        FAILED = "failed"
+
+    id = models.BigAutoField(primary_key=True)
+    # No foreign keys, like audit_events: the trace outlives what it describes.
+    application_id = models.UUIDField()
+    job_id = models.BigIntegerField(null=True)
+    agent = models.CharField(max_length=64)
+    status = models.CharField(max_length=16, choices=Status.choices)
+    output = models.JSONField(db_default={})
+    duration_ms = models.PositiveIntegerField()
+    error = models.TextField(db_default="")
+    correlation_id = models.CharField(max_length=64, db_default="")
+    created_at = models.DateTimeField(db_default=Now())
+
+    class Meta:
+        db_table = "agent_runs"
+
+    def __str__(self):
+        return f"{self.agent} #{self.id} {self.status}"
