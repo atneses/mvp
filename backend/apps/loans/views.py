@@ -1,11 +1,12 @@
 import structlog
 from django.db import IntegrityError, transaction
 from rest_framework import generics, status
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from apps.accounts.models import User
-from apps.accounts.permissions import CountryScoped
+from apps.accounts.permissions import CountryScoped, IsAdmin
 
 from .models import LoanApplication
 from .pagination import LoanApplicationCursorPagination
@@ -14,7 +15,10 @@ from .serializers import (
     LoanApplicationDetailSerializer,
     LoanApplicationFilterSerializer,
     LoanApplicationListSerializer,
+    StatusChangeSerializer,
 )
+from .services import VersionConflictError, change_status
+from .states import InvalidTransitionError
 
 ONE_ACTIVE_PER_DOCUMENT = "loan_one_active_per_document"
 
@@ -25,6 +29,12 @@ class ActiveApplicationExists(APIException):
     status_code = status.HTTP_409_CONFLICT
     default_detail = "There is already an active application for this document."
     default_code = "active_application_exists"
+
+
+class VersionConflict(APIException):
+    status_code = status.HTTP_409_CONFLICT
+    default_detail = "The application was changed by someone else. Reload it and try again."
+    default_code = "version_conflict"
 
 
 class LoanApplicationListCreateView(generics.ListCreateAPIView):
@@ -76,3 +86,39 @@ class LoanApplicationDetailView(generics.RetrieveAPIView):
             # Full PII was shown: leave a trace (ids only, never the data).
             logger.info("pii_access", user_id=request.user.id, application_id=str(kwargs["pk"]))
         return response
+
+
+class LoanApplicationStatusView(generics.GenericAPIView):
+    """Manual status change by an admin."""
+
+    serializer_class = StatusChangeSerializer
+    permission_classes = [IsAuthenticated, IsAdmin, CountryScoped]
+
+    def get_queryset(self):
+        return LoanApplication.objects.filter(country__in=self.request.user.allowed_countries)
+
+    def patch(self, request, *args, **kwargs):
+        application = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        previous = application.status
+
+        try:
+            change_status(application, data["to"], data["expected_version"])
+        except VersionConflictError:
+            raise VersionConflict() from None
+        except InvalidTransitionError as error:
+            raise ValidationError({"to": [str(error)]}) from None
+
+        logger.info(
+            "status_changed_manually",
+            application_id=str(application.id),
+            user_id=request.user.id,
+            previous=previous,
+            to=application.status,
+            reason=data["reason"],
+        )
+        return Response(
+            {"id": application.id, "status": application.status, "version": application.version}
+        )

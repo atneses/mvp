@@ -102,3 +102,9 @@ class LoanApplicationListSerializer(serializers.ModelSerializer):
 class LoanApplicationFilterSerializer(serializers.Serializer):
     country = serializers.CharField(max_length=2, required=False)
     status = serializers.ChoiceField(choices=LoanApplication.Status.choices, required=False)
+
+
+class StatusChangeSerializer(serializers.Serializer):
+    to = serializers.ChoiceField(choices=LoanApplication.Status.choices)
+    reason = serializers.CharField(max_length=500)
+    expected_version = serializers.IntegerField(min_value=1)
