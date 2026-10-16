@@ -20,6 +20,10 @@ class CountryPlugin(Protocol):
         """Return the normalized document or raise InvalidDocumentError."""
         pass
 
+    def fetch_bank_profile(self, document: str) -> dict:
+        """Common format for every bank: {"monthly_debt_payments": "<decimal as text>"}."""
+        pass
+
 
 class InvalidDocumentError(ValueError):
     """The identity document is not valid. The message never includes the document (PII)."""

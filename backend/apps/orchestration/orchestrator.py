@@ -1,5 +1,6 @@
 import structlog
 
+from agents.banking import BankingAgent
 from agents.base import AgentContext
 from agents.intake import IntakeAgent
 from agents.stubs import PassThroughAgent
@@ -13,7 +14,7 @@ S = LoanApplication.Status
 
 AGENTS = {
     S.CREATED: IntakeAgent(),
-    S.FETCHING_BANK_DATA: PassThroughAgent("banking", S.EVALUATING),
+    S.FETCHING_BANK_DATA: BankingAgent(),
     S.EVALUATING: PassThroughAgent("risk", S.APPROVED),
 }
 
@@ -37,6 +38,11 @@ def advance(job: Job) -> None:
         with audit_context(
             correlation_id=job.correlation_id, reason=result.reason, agent=agent.name
         ):
-            change_status(application, result.next_status, expected_version=application.version)
+            change_status(
+                application,
+                result.next_status,
+                expected_version=application.version,
+                updates=result.updates,
+            )
     except VersionConflictError:
         logger.info("version_conflict_skipped", agent=agent.name)

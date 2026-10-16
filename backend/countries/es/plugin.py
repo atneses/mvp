@@ -1,4 +1,4 @@
-from countries.es import document
+from countries.es import bank, document
 
 
 class SpainPlugin:
@@ -7,6 +7,7 @@ class SpainPlugin:
     # Synchronous bank provider: the base flow is enough.
     state_extension = {}
     validate_document = staticmethod(document.validate_document)
+    fetch_bank_profile = staticmethod(bank.fetch_bank_profile)
 
 
 plugin = SpainPlugin()

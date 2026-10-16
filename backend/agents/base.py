@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
 
@@ -21,6 +21,7 @@ class AgentContext:
 class AgentResult:
     next_status: str
     reason: str = ""
+    updates: dict[str, Any] = field(default_factory=dict)
 
 
 class Agent(ABC):

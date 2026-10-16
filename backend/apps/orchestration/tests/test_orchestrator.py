@@ -9,8 +9,14 @@ from apps.orchestration.queue import JobQueue
 from apps.orchestration.worker import Worker
 
 
-@pytest.mark.django_db
-def test_application_goes_through_the_flow_on_its_own():
+@pytest.fixture
+def spanish_bank(live_server, settings):
+    # A real HTTP server running the simulator, so the agent makes a real request.
+    settings.ES_BANK_URL = f"{live_server.url}/simulators/es/bank-profile"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_application_goes_through_the_flow_on_its_own(spanish_bank):
     application = LoanApplication.objects.create(
         country="ES",
         amount=Decimal("15000"),
@@ -27,6 +33,7 @@ def test_application_goes_through_the_flow_on_its_own():
 
     application.refresh_from_db()
     assert application.status == "APPROVED"
+    assert application.bank_profile == {"monthly_debt_payments": "1176.96"}
     trail = AuditEvent.objects.filter(application_id=application.id).order_by("id")
     assert [(e.data["to"], e.data["agent"]) for e in trail] == [
         ("CREATED", None),

@@ -11,5 +11,8 @@ class MexicoPlugin:
     }
     validate_document = staticmethod(document.validate_document)
 
+    def fetch_bank_profile(self, document):
+        raise NotImplementedError("The Mexican bank provider arrives in step 35.")
+
 
 plugin = MexicoPlugin()

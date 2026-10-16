@@ -36,6 +36,8 @@ class LoanApplication(models.Model):
     full_name = models.CharField(max_length=200)
     # Normalized by the country plugin (e.g. "12345678Z"), so duplicates can be found.
     document = models.CharField(max_length=32)
+    # Common format for every country's bank (see CountryPlugin.fetch_bank_profile).
+    bank_profile = models.JSONField(null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
 
     created_at = models.DateTimeField(auto_now_add=True)
