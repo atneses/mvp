@@ -6,7 +6,7 @@ from django.db import connection, transaction
 
 
 @contextmanager
-def audit_context(*, actor_id=None, correlation_id="", reason=""):
+def audit_context(*, actor_id=None, correlation_id="", reason="", agent=""):
     """Open a transaction whose changes the triggers attribute to this actor and request.
 
     set_config(..., true) is local to the transaction: nothing leaks to the next one.
@@ -16,7 +16,8 @@ def audit_context(*, actor_id=None, correlation_id="", reason=""):
             cursor.execute(
                 "SELECT set_config('app.actor_id', %s, true),"
                 " set_config('app.correlation_id', %s, true),"
-                " set_config('app.reason', %s, true)",
-                [str(actor_id or ""), correlation_id or "", reason or ""],
+                " set_config('app.reason', %s, true),"
+                " set_config('app.agent', %s, true)",
+                [str(actor_id or ""), correlation_id or "", reason or "", agent or ""],
             )
         yield

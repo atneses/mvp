@@ -16,7 +16,6 @@ from countries.registry import country_choices
 class LoanApplication(models.Model):
     class Status(models.TextChoices):
         CREATED = "CREATED"
-        VALIDATING = "VALIDATING"
         FETCHING_BANK_DATA = "FETCHING_BANK_DATA"
         WAITING_BANK_CALLBACK = "WAITING_BANK_CALLBACK"
         EVALUATING = "EVALUATING"

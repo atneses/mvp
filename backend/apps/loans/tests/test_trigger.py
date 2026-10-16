@@ -27,7 +27,7 @@ def application(db):
 
 def test_each_status_change_creates_a_job_and_an_audit_row(application):
     with audit_context(actor_id=7, correlation_id="req-2", reason="manual check"):
-        change_status(application, "VALIDATING", expected_version=1)
+        change_status(application, "CANCELLED", expected_version=1)
 
     jobs = Job.objects.filter(application=application).order_by("id")
     assert [(j.kind, j.dedupe_key, j.correlation_id) for j in jobs] == [
@@ -39,9 +39,10 @@ def test_each_status_change_creates_a_job_and_an_audit_row(application):
     assert last.actor_id == 7
     assert last.data == {
         "from": "CREATED",
-        "to": "VALIDATING",
+        "to": "CANCELLED",
         "version": 2,
         "reason": "manual check",
+        "agent": None,
     }
 
 

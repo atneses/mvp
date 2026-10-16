@@ -20,6 +20,7 @@ class AgentContext:
 @dataclass(frozen=True)
 class AgentResult:
     next_status: str
+    reason: str = ""
 
 
 class Agent(ABC):

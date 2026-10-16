@@ -38,15 +38,15 @@ def _change(client, application, to, expected_version):
 def test_change_with_the_current_version_then_a_stale_one(application):
     admin = _client(User.Role.ADMIN)
 
-    ok = _change(admin, application, "VALIDATING", expected_version=1)
+    ok = _change(admin, application, "CANCELLED", expected_version=1)
     # A second admin still looking at version 1.
-    stale = _change(admin, application, "CANCELLED", expected_version=1)
+    stale = _change(admin, application, "REJECTED", expected_version=1)
 
     assert ok.status_code == 200
     assert ok.json()["version"] == 2
     assert stale.status_code == 409
     application.refresh_from_db()
-    assert (application.status, application.version) == ("VALIDATING", 2)
+    assert (application.status, application.version) == ("CANCELLED", 2)
 
 
 def test_illegal_transition_is_rejected(application):
@@ -57,6 +57,6 @@ def test_illegal_transition_is_rejected(application):
 
 
 def test_analyst_cannot_change_the_status(application):
-    response = _change(_client(User.Role.ANALYST), application, "VALIDATING", expected_version=1)
+    response = _change(_client(User.Role.ANALYST), application, "CANCELLED", expected_version=1)
 
     assert response.status_code == 403

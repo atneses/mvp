@@ -29,7 +29,7 @@ def _client(username, role=User.Role.ANALYST, countries=("ES",)):
 
 def test_every_error_has_the_same_format(application):
     detail = f"/api/loan-applications/{application.id}"
-    status_change = {"to": "VALIDATING", "reason": "check", "expected_version": 2}
+    status_change = {"to": "CANCELLED", "reason": "check", "expected_version": 2}
     invalid_document = {
         "country": "ES",
         "amount": "1000",
