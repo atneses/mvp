@@ -8,6 +8,7 @@ from agents.notifier import NotifierAgent
 from agents.risk import RiskAgent
 from apps.loans.models import LoanApplication
 from apps.loans.services import VersionConflictError, change_status, save_updates
+from apps.loans.states import InvalidTransitionError
 from core.audit import audit_context
 
 from .models import Job
@@ -36,8 +37,13 @@ def advance(job: Job) -> None:
         logger.info("stale_job_skipped", version=application.version)
         return
     for agent in AGENTS.get(application.status, []):
-        if not _run(agent, application, job):
-            return
+        try:
+            if not _run(agent, application, job):
+                return
+        except Exception as error:
+            if job.attempts >= job.max_attempts:
+                _mark_failed(application, job, agent, error)
+            raise  # the queue retries it, or marks it dead after the last attempt
 
 
 def _run(agent, application, job) -> bool:
@@ -60,3 +66,12 @@ def _run(agent, application, job) -> bool:
     except VersionConflictError:
         logger.info("version_conflict_skipped", agent=agent.name)
     return False
+
+
+def _mark_failed(application, job, agent, error):
+    try:
+        with audit_context(correlation_id=job.correlation_id, reason=repr(error), agent=agent.name):
+            change_status(application, S.FAILED, expected_version=application.version)
+    except InvalidTransitionError, VersionConflictError:
+        # Already decided (e.g. only the notification failed) or changed meanwhile: keep it.
+        logger.info("failed_status_skipped", status=application.status)
